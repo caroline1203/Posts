@@ -12,7 +12,7 @@ const (
 	BUCKET_NAME = "aroundproject"
 )
 
-func saveToGCS(r io.Reader, objectName string) (stirng, error) {
+func saveToGCS(r io.Reader, objectName string) (string, error) {
 	ctx := context.Background()
 
 	client, err := storage.NewClient(ctx)
@@ -20,13 +20,13 @@ func saveToGCS(r io.Reader, objectName string) (stirng, error) {
 		return "", err
 	}
 
-	object := client.Bucket(BUCKET_NAME).Objects(objectName)
+	object := client.Bucket(BUCKET_NAME).Object(objectName)
 	wc := object.NewWriter(ctx)
 	if _, err := io.Copy(wc, r); err != nil {
 		return "", err
 	}
 
-	if err := wc.Close(0); err != nil {
+	if err := wc.Close(); err != nil {
 		return "", err
 	}
 

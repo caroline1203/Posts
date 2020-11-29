@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"mime/multipart"
 	"reflect"
 
 	"github.com/olivere/elastic"
+	"github.com/pborman/uuid"
 )
 
 const (
@@ -49,4 +52,39 @@ func getPostFromSearchResult(searchResult *elastic.SearchResult) []Post {
 		}
 	}
 	return posts
+}
+
+func savePost(post *Post, file multipart.File) error {
+	id := uuid.New()
+	mediaLink, err := saveToGCS(file, id)
+	if err != nil {
+		return err
+	}
+	post.Url = mediaLink
+
+	err = saveToES(post, POST_INDEX, id)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Post is saved to Elasticsearch: %s\n", post.Message)
+	return nil
+}
+
+func addUser(user *User) (bool, error) {
+	query := elastic.NewTermQuery("username", user.Username)
+	searchResult, err := readFromES(query, USER_INDEX)
+	if err != nil {
+		return false, err
+	}
+
+	if searchResult.TotalHits() > 0 {
+		return false, nil
+	}
+
+	err = saveToES(user, USER_INDEX, user.Username)
+	if err != nil {
+		return false, err
+	}
+	fmt.Printf("User is added: %s\n", user.Username)
+	return true, nil
 }

@@ -36,19 +36,20 @@ func saveToES(i interface{}, index string, id string) error {
 		elastic.SetURL(ES_URL),
 		elastic.SetBasicAuth("caro", "123456"))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	_, err := client.Index().
+	_, err = client.Index().
 		Index(index).
 		Id(id).
 		BodyJson(i).
 		Do(context.Background())
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	fmt.Printf("Post is saved to Elasticsearch: %s\n", id)
 	return nil
 }
+
